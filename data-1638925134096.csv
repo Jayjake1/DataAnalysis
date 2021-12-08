@@ -1,0 +1,168 @@
+-- Database: postgres
+
+-- DROP DATABASE IF EXISTS postgres;
+
+CREATE DATABASE postgres
+    WITH 
+    OWNER = postgres
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'English_India.1252'
+    LC_CTYPE = 'English_India.1252'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+
+COMMENT ON DATABASE postgres
+    IS 'default administrative connection database';
+
+CREATE TABLE IF NOT EXISTS Airbnb1(
+	id INT, 
+	name VARCHAR, 
+	host_id INT, 
+	host_name VARCHAR, 
+	neighbourhood_group VARCHAR(100),
+    neighbourhood VARCHAR, 
+	latitude FLOAT, 
+	longitude FLOAT, 
+	room_type VARCHAR(50), 
+	price INT,
+    minimum_nights INT, 
+	number_of_reviews INT, 
+	last_review DATE,
+    reviews_per_month FLOAT, 
+	calculated_host_listings_count INT,
+    availability_365 INT)
+
+COPY Airbnb1(id, name, host_id, host_name, neighbourhood_group,
+       neighbourhood, latitude, longitude, room_type, price,
+       minimum_nights, number_of_reviews, last_review,
+       reviews_per_month, calculated_host_listings_count,
+       availability_365) 
+FROM 'C:\Users\91970\Documents\Almabetter\sql_queried_1\Airbnb_NYC_2019.csv'
+DELIMITER ','
+CSV HEADER;	
+
+/* Snapshot of data */
+SELECT * FROM Airbnb1;
+
+-- Database size
+SELECT pg_size_pretty(pg_database_size('postgres'))
+
+-- Table size
+SELECT pg_size_pretty(pg_table_size('Airbnb1'))
+SELECT pg_size_pretty(pg_relation_size('Airbnb1'));
+-- table size ^
+
+-- Row count
+SELECT COUNT(*) AS row_count
+FROM Airbnb1;
+
+-- Column count
+select COUNT(*) AS column_name 
+from information_schema.columns 
+where table_name='Airbnb1'
+
+SELECT * FROM Airbnb1;
+
+-- column name with datatype
+select column_name,data_type
+from INFORMATION_SCHEMA.COLUMNS
+where TABLE_NAME='Airbnb1'
+
+/* Checking Null values */
+/* Using Nested Query or sub_query */
+SELECT * FROM Airbnb1
+WHERE (
+	select column_name 
+	from INFORMATION_SCHEMA.COLUMNS
+	where table_name='Airbnb'
+) = NULL;
+
+-- SHOW columns in table Airbnb1;
+SELECT * FROM Airbnb1
+
+/* Dropping Unnecessary column like Row_ID */
+/* ALTER TABLE "Airbnb1" DROP COLUMN "row_id";
+select * from Airbnb1 limit 10 */
+
+/* getting apart from null values */
+SELECT * FROM Airbnb1
+WHERE name IS NOT NULL
+AND host_name IS NOT NULL
+AND last_review IS NOT NULL
+AND reviews_per_month IS NOT NULL;
+
+/* Deleting Null Values */
+DELETE FROM Airbnb1 WHERE name IS NULL OR name = '';
+DELETE FROM Airbnb1 WHERE host_name IS NULL OR host_name = '';
+DELETE FROM Airbnb1 WHERE last_review IS NULL OR last_review = ' ';
+DELETE FROM Airbnb1 WHERE reviews_per_month IS NULL OR reviews_per_month = '';
+
+select count(*) AS US_Count 
+from Airbnb
+where country = 'United States'
+
+
+-- getting head
+SELECT * FROM Airbnb1 LIMIT 10;
+
+-- unique name
+SELECT DISTINCT (name) FROM Airbnb1
+
+-- Host name wise bookings
+/*Micheal, David,Sonder,John, Alex are busiest hosts */
+SELECT host_name, COUNT(*) AS bookings
+FROM Airbnb1
+GROUP BY host_name
+ORDER BY COUNT(*) DESC;
+/* Sonder, Blueground, Kara, Kazuya, sonder more listings*/
+SELECT host_name, SUM(calculated_host_listings_count) AS bookings
+FROM Airbnb1
+GROUP BY host_name
+ORDER BY SUM(calculated_host_listings_count) DESC;
+-- Distinct neighbour hoods
+SELECT COUNT(DISTINCT(neighbourhood)) FROM Airbnb1; -- 221 distict
+-- which neighbourhood have more listings
+SELECT neighbourhood, count(*) As neighbourhood_count
+FROM Airbnb1
+GROUP BY neighbourhood
+order by  count(*) desc
+
+-- neighbourhood location - 5 disinct groups
+SELECT COUNT(DISTINCT(neighbourhood_group)) FROM Airbnb1;
+
+-- Manhattan has more bookings 
+SELECT neighbourhood_group, COUNT(*)
+FROM Airbnb1
+GROUP BY neighbourhood_group
+ORDER BY count(*) DESC;
+
+-- Lets find costlier among these areas
+
+SELECT neighbourhood_group, COUNT(*), AVG(price)
+FROM Airbnb1
+GROUP BY neighbourhood_group
+ORDER BY AVG(price) DESC;
+
+-- Different type of rooms
+SELECT room_type, count(*) AS type_count
+FROM Airbnb1
+GROUP BY room_type
+ORDER BY COUNT(*) 
+DESC;
+
+-- Max, Min, Avg price
+SELECT room_type,MAX(price), MIN(price), AVG(price)
+FROM Airbnb1
+GROUP BY room_type;
+
+SELECT room_type,MAX(price), MIN(price), AVG(price)
+FROM Airbnb1
+GROUP BY room_type;
+
+SELECT neighbourhood_group,COUNT(*), AVG(reviews_per_month),MAX(reviews_per_month), MIN(reviews_per_month)
+FROM Airbnb1
+GROUP BY neighbourhood_group
+ORDER BY count(*)
+DESC;
+
+
